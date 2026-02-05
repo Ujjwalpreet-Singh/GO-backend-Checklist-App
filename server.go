@@ -5,6 +5,7 @@ import (
 	"net/http"
   "strconv"
   "strings"
+	"net/url"
 )
 
 func startServer() {
@@ -14,6 +15,7 @@ func startServer() {
   http.HandleFunc("/add", handleAdd)
   http.HandleFunc("/done", handleDone)
   http.HandleFunc("/delete", handleDelete)
+	http.HandleFunc("/remove/",HandleRemove)
 
   http.Handle("/static/",
   	http.StripPrefix("/static/",
@@ -40,9 +42,10 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	`
 
 	for name := range db.Lists {
+		safe := url.PathEscape(name)
 		html += fmt.Sprintf(
-			"<li><a href='/list/%s'>%s</a></li>",
-			name, name,
+			"<li><a href='/list/%s'>%s</a> <a class='delete' href='/remove/%s'>[delete]</a></li>",
+			safe, name,safe,
 		)
 	}
 
@@ -62,7 +65,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleList(w http.ResponseWriter, r *http.Request) {
-	name := strings.TrimPrefix(r.URL.Path, "/list/")
+	raw := strings.TrimPrefix(r.URL.Path, "/list/")
+	name, _ := url.PathUnescape(raw)
 
 	db := loadDatabase()
 	list, ok := db.Lists[name]
@@ -177,4 +181,15 @@ func handleCreate(w http.ResponseWriter, r *http.Request) {
 	SaveDatabase(db)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func HandleRemove(w http.ResponseWriter,r * http.Request){
+	raw := strings.TrimPrefix(r.URL.Path, "/remove/")
+	name, _ := url.PathUnescape(raw)
+
+	db := RemoveFromDatabase()
+	DeleteChecklist(db,name)
+	SaveDatabase(*db)
+
+	http.Redirect(w,r,"/",http.StatusSeeOther)
 }

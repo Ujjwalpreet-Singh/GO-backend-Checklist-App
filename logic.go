@@ -14,6 +14,14 @@ func CreateChecklist(db *Database, name string) error {
   return nil
 }
 
+func DeleteChecklist(db *Database,name string) error {
+  if _,exists := db.Lists[name]; !exists{
+    return errors.New("No checklist like this exists")
+  }
+  delete(db.Lists,name)
+  return nil
+}
+
 func addItem(db *Database, listName, text string) error {
   list,ok := db.Lists[listName]
   if !ok{

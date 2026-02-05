@@ -45,3 +45,16 @@ func SaveDatabase(db Database) error{
   }
   return os.WriteFile(dbPath(),data,0644)
 }
+
+func RemoveFromDatabase() *Database {
+  db := &Database{
+    Lists: map[string]*Checklist{},
+  }
+
+  data, err := os.ReadFile(dbPath())
+  if err == nil {
+    json.Unmarshal(data, db)
+  }
+
+  return db
+}
